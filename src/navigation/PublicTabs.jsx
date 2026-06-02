@@ -4,9 +4,10 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 
 import PublicHomeScreen from "../screens/home/PublicHomeScreen";
 import RiskZonesScreen from "../screens/risk/RiskZonesScreen";
-import ReportCaseScreen from "../screens/report/ReportCaseScreen";
+// import ReportCaseScreen from "../screens/report/ReportCaseScreen";
 import InfoScreen from "../screens/info/InfoScreen";
-import ArticleDetailScreen from "../screens/articles/ArticleDetailScreen";
+// import ArticleDetailScreen from "../screens/articles/ArticleDetailScreen";
+import AboutScreen from "../screens/info/AboutScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -43,13 +44,13 @@ export default function PublicTabs() {
 
 
             <Tab.Screen
-                name="Rapport"
-                component={ReportCaseScreen}
+                name="About"
+                component={AboutScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="medkit" size={size} color={color} />
+                        <Ionicons name="information-circle" size={size} color={color} />
                     ),
-                    tabBarLabel: "Signalement",
+                    tabBarLabel: "À propos",
                 }}
             />
 

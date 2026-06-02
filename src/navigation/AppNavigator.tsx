@@ -5,6 +5,7 @@ import LoginScreen from "../screens/Auth/LoginScreen";
 import RegisterScreen from "../screens/Auth/RegisterScreen";
 import Onboarding from "../screens/Onboarding/Onboarding";
 import PublicHomeScreen from "../screens/home/PublicHomeScreen";
+import AboutScreen from "../screens/info/AboutScreen";
 
 import DrawerNavigator from "./DrawerNavigator";
 
@@ -65,6 +66,7 @@ export default function AppNavigator() {
                     {hasSeenOnboarding && !isAuth && (
                         <Stack.Screen name="PublicHome" component={PublicHomeScreen} />
                     )}
+                    <Stack.Screen name="AboutScreen" component={AboutScreen} />
 
                     {/* AUTH SCREENS (accessible depuis PublicHome ou navigation interne) */}
                     <Stack.Screen name="Login" component={LoginScreen} />

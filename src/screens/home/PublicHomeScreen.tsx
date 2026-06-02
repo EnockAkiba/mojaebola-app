@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 import Ionicons from '@react-native-vector-icons/ionicons';
-
+import { getData } from '../../services/dataService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LightTheme, DarkTheme } from '../../config/Theme';
@@ -24,149 +24,6 @@ export type PublicHomeScreenProps = {
   };
 };
 
-const languageOptions = ['FR', 'SW', 'LG'];
-
-const translations = {
-  FR: {
-    welcome: 'Système de surveillance',
-    appTitle: 'Ebola Surveillance',
-
-    heroDescription:
-      'Plateforme de riposte Ebola pour la surveillance, le signalement et la sensibilisation communautaire.',
-
-    alert: 'ALERTE',
-
-    epidemicTitle:
-      'Épidémie active dans votre région',
-
-    epidemicDescription:
-      'Contactez immédiatement les services sanitaires en cas de symptômes.',
-
-    call: 'Appeler le numéro vert',
-
-    services: 'Services disponibles',
-
-    servicesDescription:
-      'Accès rapide aux fonctionnalités principales',
-
-    healthAgent:
-      'Vous êtes un agent de santé ?',
-
-    report: 'Signaler un cas',
-
-    reportDesc:
-      'Déclarer rapidement un patient suspect',
-
-    risk: 'Zones à risque',
-
-    riskDesc:
-      'Consulter les zones sensibles',
-
-    info: 'Informations',
-
-    infoDesc:
-      'Protocoles et mesures sanitaires',
-
-    centers: 'Centres de soins',
-
-    centersDesc:
-      'Trouver un centre proche',
-  },
-
-  SW: {
-    welcome: 'Mfumo wa ufuatiliaji',
-
-    appTitle: 'Ufuatiliaji wa Ebola',
-
-    heroDescription:
-      'Jukwaa la kukabiliana na Ebola kwa ufuatiliaji, taarifa na elimu kwa jamii.',
-
-    alert: 'TAHADHARI',
-
-    epidemicTitle:
-      'Mlupuko unaendelea katika eneo lako',
-
-    epidemicDescription:
-      'Wasiliana mara moja na huduma za afya ukiwa na dalili.',
-
-    call: 'Piga simu ya dharura',
-
-    services: 'Huduma zinazopatikana',
-
-    servicesDescription:
-      'Ufikiaji wa haraka wa huduma muhimu',
-
-    healthAgent:
-      'Je, wewe ni mhudumu wa afya?',
-
-    report: 'Ripoti kesi',
-
-    reportDesc:
-      'Toa taarifa ya mgonjwa anayeshukiwa',
-
-    risk: 'Maeneo hatarishi',
-
-    riskDesc:
-      'Angalia maeneo yenye hatari',
-
-    info: 'Taarifa',
-
-    infoDesc:
-      'Kanuni na hatua za afya',
-
-    centers: 'Vituo vya matibabu',
-
-    centersDesc:
-      'Tafuta kituo kilicho karibu',
-  },
-
-  LG: {
-    welcome: 'Système ya surveillance',
-
-    appTitle: 'Surveillance Ebola',
-
-    heroDescription:
-      'Plateforme ya kolandela Ebola mpo na surveillance, signalement mpe sensibilisation.',
-
-    alert: 'ALERTE',
-
-    epidemicTitle:
-      'Epidémie ezali na région na bino',
-
-    epidemicDescription:
-      'Benga ba services sanitaires mbala moko soki ozali na ba symptômes.',
-
-    call: 'Benga numéro vert',
-
-    services: 'Ba services disponibles',
-
-    servicesDescription:
-      'Accès rapide na fonctionnalités principales',
-
-    healthAgent:
-      'Ozali agent ya santé ?',
-
-    report: 'Signaler cas',
-
-    reportDesc:
-      'Déclarer malade suspect rapidement',
-
-    risk: 'Zones à risque',
-
-    riskDesc:
-      'Tala ba zones sensibles',
-
-    info: 'Informations',
-
-    infoDesc:
-      'Mesures sanitaires mpe protocoles',
-
-    centers: 'Centres de soins',
-
-    centersDesc:
-      'Chercher centre proche',
-  },
-};
 
 function openEmergencyLine() {
   const phone = '08214419595';
@@ -178,25 +35,35 @@ function openEmergencyLine() {
     );
   });
 }
-
+const languageOptions = ['FR', 'SW', 'LG'];
 export default function PublicHomeScreen({
   navigation,
 }: PublicHomeScreenProps) {
-  const [language, setLanguage] =
-    useState('FR');
-
+  const [language, setLanguage] = useState('FR');
+  const [translationsData, setTranslationsData] = useState(null);
   const scheme = useColorScheme();
 
-  const theme =
-    scheme === 'dark'
-      ? DarkTheme
-      : LightTheme;
+  const theme = scheme === 'dark' ? DarkTheme : LightTheme;
 
   const t =
-    translations[
-      language as keyof typeof translations
-    ];
+  translationsData?.[language] ??
+  translationsData?.FR ??
+  {};
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getData('translations');
+        setTranslationsData(data);
+      } catch (e) {
+        console.log('Erreur chargement translations:', e);
+      }
+    };
 
+    load();
+  }, []);
+  const handleNavigate = (screen: string) => {
+    navigation?.navigate?.(screen);
+  };
   const actionCards = useMemo(
     () => [
       {
@@ -235,14 +102,17 @@ export default function PublicHomeScreen({
         screen: 'CTEScreen',
       },
     ],
-    [language]
+    [language, t]
   );
-
-  const handleNavigate = (screen: string) => {
-    if (navigation?.navigate) {
-      navigation.navigate(screen);
-    }
-  };
+  if (!translationsData) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text style={{ textAlign: 'center', marginTop: 50 }}>
+          Chargement...
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -255,7 +125,7 @@ export default function PublicHomeScreen({
       ]}
     >
       <StatusBar
-        barStyle="light-content"
+        barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
       />
 
       <ScrollView
@@ -313,14 +183,14 @@ export default function PublicHomeScreen({
                   style={[
                     styles.languageButton,
                     active &&
-                      styles.languageButtonActive,
+                    styles.languageButtonActive,
                   ]}
                 >
                   <Text
                     style={[
                       styles.languageText,
                       active &&
-                        styles.languageTextActive,
+                      styles.languageTextActive,
                     ]}
                   >
                     {option}
@@ -485,17 +355,29 @@ export default function PublicHomeScreen({
 
         {/* FOOTER */}
         <View style={styles.footer}>
-          <Pressable
-            onPress={() =>
-              handleNavigate(
-                'LoginScreen'
-              )
-            }
-          >
-            <Text style={styles.footerLink}>
-              {t.healthAgent}
-            </Text>
-          </Pressable>
+          <View style={styles.footerLinks}>
+            <Pressable
+              onPress={() =>
+                handleNavigate(
+                  'LoginScreen'
+                )
+              }
+            >
+              <Text style={styles.footerLink}>
+                {t.healthAgent}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() =>
+                handleNavigate('AboutScreen')
+              }
+            >
+              <Text style={styles.footerLink}>
+                À propos
+              </Text>
+            </Pressable>
+          </View>
 
           <Text style={styles.footerText}>
             Version 1.0.0 · MojaTech
@@ -696,11 +578,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
 
+  footerLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+
   footerLink: {
     color: '#0D1B2A',
     fontWeight: '800',
     fontSize: 15,
-    marginBottom: 10,
   },
 
   footerText: {
