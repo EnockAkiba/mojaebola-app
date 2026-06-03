@@ -74,8 +74,6 @@ export default function OnboardingScreen({  }) {
 
   const handleSkip = async () => {
     await finishOnboarding();
-    console.log("Onboarding passé, redirection vers l'app...");
-
   };
 
   const renderItem = ({ item }) => {

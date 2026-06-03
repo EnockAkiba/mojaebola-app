@@ -1,54 +1,52 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
-  Linking,
-  Pressable,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
+  Alert, Linking, Pressable, ScrollView, StatusBar,
+  StyleSheet, Text, TouchableOpacity, useColorScheme, View,
 } from 'react-native';
-
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { getData } from '../../services/dataService';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { LightTheme, DarkTheme } from '../../config/Theme';
 
 export type PublicHomeScreenProps = {
-  navigation?: {
-    navigate: (screen: string) => void;
-  };
+  navigation?: { navigate: (screen: string) => void };
 };
 
+// ✅ Type sorti du composant
+type ActionCard = {
+  key: string;
+  title: string;
+  subtitle: string;
+  color: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  screen: string;
+};
+
+const languageOptions = [
+  { value: 'FR', label: 'FR' },
+  { value: 'SW', label: 'SW' },
+  { value: 'LG', label: 'LG' },
+];
 
 function openEmergencyLine() {
-  const phone = '08214419595';
-
-  Linking.openURL(`tel:${phone}`).catch(() => {
-    Alert.alert(
-      'Erreur',
-      "Impossible d'effectuer l'appel."
-    );
-  });
+  Linking.openURL('tel:08214419595').catch(() =>
+    Alert.alert('Erreur', "Impossible d'effectuer l'appel.")
+  );
 }
-const languageOptions = ['FR', 'SW', 'LG'];
-export default function PublicHomeScreen({
-  navigation,
-}: PublicHomeScreenProps) {
-  const [language, setLanguage] = useState('FR');
-  const [translationsData, setTranslationsData] = useState(null);
-  const scheme = useColorScheme();
 
+export default function PublicHomeScreen({ navigation }: PublicHomeScreenProps) {
+  const [language, setLanguage] = useState('FR');
+  const [translationsData, setTranslationsData] = useState<Record<string, any> | null>(null);
+  const [error, setError] = useState(false); // ✅ gestion d'erreur
+  const scheme = useColorScheme();
   const theme = scheme === 'dark' ? DarkTheme : LightTheme;
 
-  const t =
-  translationsData?.[language] ??
-  translationsData?.FR ??
-  {};
+  // ✅ t mémoïsé
+  const t = useMemo(
+    () => translationsData?.[language] ?? translationsData?.['FR'] ?? {},
+    [translationsData, language]
+  );
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -56,144 +54,69 @@ export default function PublicHomeScreen({
         setTranslationsData(data);
       } catch (e) {
         console.log('Erreur chargement translations:', e);
+        setError(true); // ✅ informe l'utilisateur
       }
     };
-
     load();
   }, []);
-  const handleNavigate = (screen: string) => {
-    navigation?.navigate?.(screen);
-  };
-  const actionCards = useMemo(
-    () => [
-      {
-        key: 'report',
-        title: t.report,
-        subtitle: t.reportDesc,
-        color: '#D64545',
-        icon: 'warning',
-        screen: 'ReportCaseScreen',
-      },
 
-      {
-        key: 'risk',
-        title: t.risk,
-        subtitle: t.riskDesc,
-        color: '#F39C12',
-        icon: 'location',
-        screen: 'RiskZonesScreen',
-      },
+  // ✅ dépendance simplifiée
+  const actionCards = useMemo<ActionCard[]>(() => [
+    { key: 'report', title: t.report, subtitle: t.reportDesc, color: '#D64545', icon: 'warning', screen: 'ReportCaseScreen' },
+    { key: 'risk',   title: t.risk,   subtitle: t.riskDesc,   color: '#F39C12', icon: 'location', screen: 'RiskZonesScreen' },
+    { key: 'info',   title: t.info,   subtitle: t.infoDesc,   color: '#2980B9', icon: 'book',     screen: 'InfoScreen' },
+    { key: 'ctes',   title: t.centers, subtitle: t.centersDesc, color: '#16A085', icon: 'medkit', screen: 'CTEScreen' },
+  ], [t]);
 
-      {
-        key: 'info',
-        title: t.info,
-        subtitle: t.infoDesc,
-        color: '#2980B9',
-        icon: 'book',
-        screen: 'InfoScreen',
-      },
+  const handleNavigate = (screen: string) => navigation?.navigate?.(screen);
 
-      {
-        key: 'ctes',
-        title: t.centers,
-        subtitle: t.centersDesc,
-        color: '#16A085',
-        icon: 'medkit',
-        screen: 'CTEScreen',
-      },
-    ],
-    [language, t]
-  );
-  if (!translationsData) {
+  // ✅ écran d'erreur
+  if (error) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <Text style={{ textAlign: 'center', marginTop: 50 }}>
-          Chargement...
+        <Text style={{ textAlign: 'center', marginTop: 50, color: '#D64545' }}>
+          Erreur de chargement. Vérifiez votre connexion.
         </Text>
       </SafeAreaView>
     );
   }
 
-  return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        {
-          backgroundColor:
-            theme.colors.background,
-        },
-      ]}
-    >
-      <StatusBar
-        barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
-      />
+  if (!translationsData) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text style={{ textAlign: 'center', marginTop: 50 }}>Chargement...</Text>
+      </SafeAreaView>
+    );
+  }
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={
-          styles.container
-        }
-      >
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
+
         {/* HERO */}
-        <View
-          style={[
-            styles.heroSection,
-            {
-              backgroundColor:
-                theme.colors.hero,
-            },
-          ]}
-        >
+        <View style={[styles.heroSection, { backgroundColor: theme.colors.hero }]}>
           <View style={styles.topRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.welcomeText}>
-                {t.welcome}
-              </Text>
-
-              <Text style={styles.appTitle}>
-                {t.appTitle}
-              </Text>
+              <Text style={styles.welcomeText}>{t.welcome}</Text>
+              <Text style={styles.appTitle}>{t.appTitle}</Text>
             </View>
-
             <View style={styles.logoContainer}>
-              <Ionicons
-                name="shield-checkmark"
-                size={34}
-                color="#FFFFFF"
-              />
+              <Ionicons name="shield-checkmark" size={34} color="#FFFFFF" />
             </View>
           </View>
-
-          <Text style={styles.heroDescription}>
-            {t.heroDescription}
-          </Text>
-
-          {/* LANGUAGES */}
+          <Text style={styles.heroDescription}>{t.heroDescription}</Text>
           <View style={styles.languageContainer}>
             {languageOptions.map(option => {
-              const active =
-                option === language;
-
+              const active = option.value === language;
               return (
                 <Pressable
-                  key={option}
-                  onPress={() =>
-                    setLanguage(option)
-                  }
-                  style={[
-                    styles.languageButton,
-                    active &&
-                    styles.languageButtonActive,
-                  ]}
+                  key={option.value}
+                  onPress={() => setLanguage(option.value)}
+                  style={[styles.languageButton, active && styles.languageButtonActive]}
                 >
-                  <Text
-                    style={[
-                      styles.languageText,
-                      active &&
-                      styles.languageTextActive,
-                    ]}
-                  >
-                    {option}
+                  <Text style={[styles.languageText, active && styles.languageTextActive]}>
+                    {option.label}
                   </Text>
                 </Pressable>
               );
@@ -202,86 +125,22 @@ export default function PublicHomeScreen({
         </View>
 
         {/* ALERT */}
-        <View
-          style={[
-            styles.alertCard,
-            {
-              backgroundColor:
-                theme.colors.card,
-            },
-          ]}
-        >
+        <View style={[styles.alertCard, { backgroundColor: theme.colors.card }]}>
           <View style={styles.alertBadge}>
-            <Text
-              style={styles.alertBadgeText}
-            >
-              {t.alert}
-            </Text>
+            <Text style={styles.alertBadgeText}>{t.alert}</Text>
           </View>
-
-          <Text
-            style={[
-              styles.alertTitle,
-              { color: theme.colors.text },
-            ]}
-          >
-            {t.epidemicTitle}
-          </Text>
-
-          <Text
-            style={[
-              styles.alertDescription,
-              {
-                color:
-                  theme.colors.subText,
-              },
-            ]}
-          >
-            {t.epidemicDescription}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.emergencyButton}
-            onPress={openEmergencyLine}
-          >
-            <Ionicons
-              name="call"
-              size={18}
-              color="#FFFFFF"
-            />
-
-            <Text
-              style={
-                styles.emergencyButtonText
-              }
-            >
-              {t.call}
-            </Text>
+          <Text style={[styles.alertTitle, { color: theme.colors.text }]}>{t.epidemicTitle}</Text>
+          <Text style={[styles.alertDescription, { color: theme.colors.subText }]}>{t.epidemicDescription}</Text>
+          <TouchableOpacity style={styles.emergencyButton} onPress={openEmergencyLine}>
+            <Ionicons name="call" size={18} color="#FFFFFF" />
+            <Text style={styles.emergencyButtonText}>{t.call}</Text>
           </TouchableOpacity>
         </View>
 
         {/* SECTION */}
         <View style={styles.sectionHeader}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: theme.colors.text },
-            ]}
-          >
-            {t.services}
-          </Text>
-
-          <Text
-            style={[
-              styles.sectionSubtitle,
-              {
-                color:
-                  theme.colors.subText,
-              },
-            ]}
-          >
-            {t.servicesDescription}
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.services}</Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.colors.subText }]}>{t.servicesDescription}</Text>
         </View>
 
         {/* GRID */}
@@ -290,65 +149,15 @@ export default function PublicHomeScreen({
             <TouchableOpacity
               key={card.key}
               activeOpacity={0.85}
-              style={[
-                styles.cardWrapper,
-                {
-                  backgroundColor:
-                    theme.colors.card,
-                },
-              ]}
-              onPress={() =>
-                handleNavigate(card.screen)
-              }
+              style={[styles.cardWrapper, { backgroundColor: theme.colors.card }]}
+              onPress={() => handleNavigate(card.screen)}
             >
-              <View
-                style={[
-                  styles.iconContainer,
-                  {
-                    backgroundColor:
-                      card.color,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={card.icon}
-                  size={28}
-                  color="#FFFFFF"
-                />
+              <View style={[styles.iconContainer, { backgroundColor: card.color }]}>
+                <Ionicons name={card.icon} size={28} color="#FFFFFF" />
               </View>
-
-              <Text
-                style={[
-                  styles.cardTitle,
-                  {
-                    color:
-                      theme.colors.text,
-                  },
-                ]}
-              >
-                {card.title}
-              </Text>
-
-              <Text
-                style={[
-                  styles.cardSubtitle,
-                  {
-                    color:
-                      theme.colors.subText,
-                  },
-                ]}
-              >
-                {card.subtitle}
-              </Text>
-
-              <Ionicons
-                name="arrow-forward"
-                size={18}
-                color={
-                  theme.colors.subText
-                }
-                style={{ marginTop: 14 }}
-              />
+              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{card.title}</Text>
+              <Text style={[styles.cardSubtitle, { color: theme.colors.subText }]}>{card.subtitle}</Text>
+              <Ionicons name="arrow-forward" size={18} color={theme.colors.subText} style={{ marginTop: 14 }} />
             </TouchableOpacity>
           ))}
         </View>
@@ -356,33 +165,18 @@ export default function PublicHomeScreen({
         {/* FOOTER */}
         <View style={styles.footer}>
           <View style={styles.footerLinks}>
-            <Pressable
-              onPress={() =>
-                handleNavigate(
-                  'LoginScreen'
-                )
-              }
-            >
-              <Text style={styles.footerLink}>
-                {t.healthAgent}
-              </Text>
+            <Pressable onPress={() => handleNavigate('LoginScreen')}>
+              {/* ✅ couleur du thème */}
+              <Text style={[styles.footerLink, { color: theme.colors.text }]}>{t.healthAgent}</Text>
             </Pressable>
-
-            <Pressable
-              onPress={() =>
-                handleNavigate('AboutScreen')
-              }
-            >
-              <Text style={styles.footerLink}>
-                À propos
-              </Text>
+            <Pressable onPress={() => handleNavigate('AboutScreen')}>
+              {/* ✅ traduit */}
+              <Text style={[styles.footerLink, { color: theme.colors.text }]}>{t.about ?? 'À propos'}</Text>
             </Pressable>
           </View>
-
-          <Text style={styles.footerText}>
-            Version 1.0.0 · MojaTech
-          </Text>
+          <Text style={styles.footerText}>Version 1.0.0 · MojaTech</Text>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,5 +1,5 @@
 {
-  "Français": {
+  "FR": {
     "filters": ["Tous", "Symptômes", "Prévention", "Traitement", "Situation"],
     "alertBadge": "ALERTE OMS — 17 mai 2026",
     "alertTitle": "L'OMS a déclenché l'alerte internationale maximale",
@@ -14,7 +14,7 @@
     ],
     "source": "Sources : OMS · Africa CDC · Santé Publique Canada"
   },
-  "Kiswahili": {
+  "SW": {
     "filters": ["Yote", "Dalili", "Kinga", "Matibabu", "Hali"],
     "alertBadge": "TAHADHARI WHO — 17 Mei 2026",
     "alertTitle": "WHO imetangaza dharura ya kimataifa",
@@ -29,7 +29,7 @@
     ],
     "source": "Vyanzo: WHO · Africa CDC · Afya ya Umma Canada"
   },
-  "Lingala": {
+  "LG": {
     "filters": ["Nyonso", "Bimoko", "Bokatelemi", "Bolambi", "Situation"],
     "alertBadge": "LISAKOLI OMS — 17 Mai 2026",
     "alertTitle": "OMS etindi lisakoli ya mokili mobimba",
